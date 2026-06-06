@@ -2,14 +2,17 @@
 # Country Information Service
 # Single-file app: Flask serves the HTML UI at "/" AND the JSON API at
 # "/country/<name>". No separate index.html needed.
-# Run:  py app.py   then open  http://localhost:5000
 # =============================================================================
 
+import os
 import requests
 from flask import Flask, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
 
+# API ekata onima thenakin access karanna CORS allow karanawa
+CORS(app, resources={r"/country/*": {"origins": "*"}})
 
 # =============================================================================
 # HTML UI — served at GET /
@@ -120,7 +123,6 @@ input[type=text]:focus{border-color:var(--acc)}
 
   <div class="footer">
     Powered by <a href="https://restcountries.com" target="_blank">REST Countries API</a>
-    &nbsp;·&nbsp; Backend at <code>localhost:5000</code>
   </div>
 </div>
 
@@ -185,7 +187,7 @@ async function go(){
   </div>
 </div>`;
   }catch(e){
-    out.innerHTML=`<div class="center"><i class="ti ti-wifi-off ico" style="color:var(--red)"></i><p>Cannot reach the server.<br/>Make sure <code>py app.py</code> is running.</p></div>`;
+    out.innerHTML=`<div class="center"><i class="ti ti-wifi-off ico" style="color:var(--red)"></i><p>Cannot reach the server.</p></div>`;
   }
   btn.disabled=false;
 }
@@ -196,7 +198,7 @@ async function go(){
 
 # =============================================================================
 # Route 1 — UI
-# Serves the embedded HTML page when the user opens http://localhost:5000
+# Serves the embedded HTML page when the user opens the root URL
 # =============================================================================
 @app.route("/", methods=["GET"])
 def index():
@@ -223,7 +225,7 @@ def fetch_country_info(country_name: str):
     return {
         "country_name": c.get("name", {}).get("common", "N/A"),
         "official_name": c.get("name", {}).get("official", "N/A"),
-        "capital":   ", ".join(capital_list) if capital_list else "N/A",
+        "capital":  ", ".join(capital_list) if capital_list else "N/A",
         "region":    c.get("region", "N/A"),
         "subregion": c.get("subregion", "N/A"),
         "population": c.get("population", 0),
@@ -260,6 +262,7 @@ def get_country(country_name: str):
 # Entry point
 # =============================================================================
 if __name__ == "__main__":
-    print("\n  Country Information Service")
-    print("  Open your browser at:  http://localhost:5000\n")
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    # Render automatically assigns a PORT environment variable. 
+    # If it's not found (like when running locally), it will default to 5000.
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
